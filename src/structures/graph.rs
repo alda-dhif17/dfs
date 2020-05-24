@@ -51,12 +51,17 @@ where
 
     /// "Visits" a node by putting it in the visited HashSet
     fn visit(&self, node: NodeRef<T>) {
-        self.get_visited().insert(node);
+        self.get_visited_mut().insert(node);
     }
 
     /// Used to keep the code DRY
-    fn get_visited(&self) -> &mut HashSet<NodeRef<T>> {
+    fn get_visited_mut(&self) -> &mut HashSet<NodeRef<T>> {
         unsafe { &mut *self.visited.get() }
+    }
+
+    /// Used to keep the code DRY
+    fn get_visited(&self) -> &HashSet<NodeRef<T>> {
+        unsafe { &*self.visited.get() }
     }
 
     /// The actual DFS-implementation
