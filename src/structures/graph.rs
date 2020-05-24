@@ -1,6 +1,4 @@
 use super::*;
-use std::cell::UnsafeCell;
-use std::collections::HashSet;
 use std::hash::Hash;
 use std::rc::Rc;
 
@@ -10,11 +8,7 @@ where
     T: Hash + Eq,
 {
     matrix: AdjacencyMatrix<T>,
-
-    /// This is wrapped within an UnsafeCell
-    /// in order to not require a mutable reference
-    /// to self to alter it (thus avoiding cloning the neighbours)
-    visited: UnsafeCell<HashSet<Rc<Node<T>>>>,
+    visited: VisitedWrapper<T>,
 }
 
 impl<T> Graph<T>
@@ -24,7 +18,7 @@ where
     pub fn new() -> Self {
         Self {
             matrix: AdjacencyMatrix::new(),
-            visited: UnsafeCell::new(HashSet::new()),
+            visited: VisitedWrapper::new(),
         }
     }
 
@@ -46,22 +40,12 @@ where
 
     /// Checks whether a node has been visited yet
     fn visited(&self, node: &NodeRef<T>) -> bool {
-        self.get_visited().contains(node)
+        self.visited.get_visited().contains(node)
     }
 
     /// "Visits" a node by putting it in the visited HashSet
     fn visit(&self, node: NodeRef<T>) {
-        self.get_visited_mut().insert(node);
-    }
-
-    /// Used to keep the code DRY
-    fn get_visited_mut(&self) -> &mut HashSet<NodeRef<T>> {
-        unsafe { &mut *self.visited.get() }
-    }
-
-    /// Used to keep the code DRY
-    fn get_visited(&self) -> &HashSet<NodeRef<T>> {
-        unsafe { &*self.visited.get() }
+        self.visited.get_visited_mut().insert(node);
     }
 
     /// The actual DFS-implementation
