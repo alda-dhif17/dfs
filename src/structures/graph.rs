@@ -46,14 +46,17 @@ where
 
     /// Checks whether a node has been visited yet
     fn visited(&self, node: &NodeRef<T>) -> bool {
-        unsafe { (*self.visited.get()).contains(node) }
+        self.get_visited().contains(node)
     }
 
     /// "Visits" a node by putting it in the visited HashSet
     fn visit(&self, node: NodeRef<T>) {
-        unsafe {
-            (*self.visited.get()).insert(node);
-        }
+        self.get_visited().insert(node);
+    }
+
+    /// Used to keep the code DRY
+    fn get_visited(&self) -> &mut HashSet<NodeRef<T>> {
+        unsafe { &mut *self.visited.get() }
     }
 
     /// The actual DFS-implementation
