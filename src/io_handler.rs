@@ -9,7 +9,7 @@ struct IONode {
     neighbours: Vec<(&'static str, i32)>,
 }
 
-const CONTENT: &'static str = include_str!("input.json");
+const CONTENT: &'static str = include_str!("../res/input.json");
 
 pub fn read_input() -> (Graph<&'static str>, Vec<NodeRef<&'static str>>) {
     let mut graph: Graph<&'static str> = Graph::new();
