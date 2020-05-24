@@ -1,0 +1,56 @@
+[
+	{
+		"node" : "A",
+		"neighbours": [
+			["C", 5]
+		]
+	},
+	{
+		"node" : "B",
+		"neighbours": [
+			["C", 10]
+		]
+	},
+	{
+		"node" : "C",
+		"neighbours" : [
+			["B", 3],
+			["D", 3],
+			["E", 3]
+		]
+	},
+	{
+		"node": "D",
+		"neighbours": [
+			["C", 25]
+		]
+	},
+	{
+		"node": "E",
+		"neighbours": [
+			["G", 3],
+			["G", 3],
+			["F", 3],
+			["C", 3]
+		]
+	},
+	{
+		"node": "F",
+		"neighbours" : [
+			["E", 14]
+		]
+	},
+	{
+		"node": "G",
+		"neighbours": [
+			["E", 27],
+			["H", 27]
+		]
+	},
+	{
+		"node": "H",
+		"neighbours" : [
+			["G", 19]
+		]
+	}
+]
