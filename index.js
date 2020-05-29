@@ -4,7 +4,7 @@ const fs = require("fs");
  *
  * Ein WunderWERK von:
  *
- * Leon Anghel, Adrian Berner, Timo Donnelly, Denis Imeri, Elias Wilfinger
+ * Adrian Berner, Timo Donnelly, Denis Imeri, Elias Wilfinger
  *
  */
 
