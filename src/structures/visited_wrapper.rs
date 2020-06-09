@@ -1,5 +1,5 @@
 use super::NodeRef;
-use std::cell::UnsafeCell;
+use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -8,10 +8,8 @@ pub struct VisitedWrapper<T>
 where
     T: Hash + Eq,
 {
-    /// This is wrapped within an UnsafeCell
-    /// in order to not require a mutable reference
-    /// to self to alter it (thus avoiding cloning the neighbours)
-    visited: UnsafeCell<HashSet<NodeRef<T>>>,
+    /// Would panick in case I messed something up :)
+    visited: RefCell<HashSet<NodeRef<T>>>,
 }
 
 impl<T> VisitedWrapper<T>
@@ -21,17 +19,17 @@ where
     /// Used to instantiate the struct
     pub fn new() -> Self {
         Self {
-            visited: UnsafeCell::new(HashSet::new()),
+            visited: RefCell::new(HashSet::new()),
         }
     }
 
     /// Returns mutable reference to contained data
-    pub fn get_visited_mut(&self) -> &mut HashSet<NodeRef<T>> {
-        unsafe { &mut *self.visited.get() }
+    pub fn get_visited_mut(&self) -> RefMut<HashSet<NodeRef<T>>> {
+        self.visited.borrow_mut()
     }
 
     /// Returns immutable reference to contained data
-    pub fn get_visited(&self) -> &HashSet<NodeRef<T>> {
-        unsafe { &*self.visited.get() }
+    pub fn get_visited(&self) -> Ref<HashSet<NodeRef<T>>> {
+        self.visited.borrow()
     }
 }
