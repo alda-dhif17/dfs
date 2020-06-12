@@ -1,0 +1,24 @@
+9
+A 3 B 5 C 3 D 1
+B 4 A 5 C 1 E 1 K 3
+C 5 A 3 B 1 D 1 G 3 E 7
+D 3 A 1 C 1 F 1
+E 5 B 1 C 7 G 1 H 4 K 1
+F 2 D 1 G 1
+G 4 F 1 C 3 E 1 H 2
+H 3 K 1 E 4 G 2
+K 3 B 3 E 1 H 1
+
+^ ^
+K A
+n n
+o z
+t a
+e h
+n l
+n K
+a a
+m n
+e t
+  e
+  n

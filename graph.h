@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <algorithm>
+#include <queue>
 #include <vector>
+#include <utility>
+#include <algorithm>
 
 //
 // DIRECTED, WEIGHTED GRAPH
@@ -35,6 +37,7 @@ struct Node {
     T value;
     std::vector<Edge<T> *> edges;
     bool visited;
+    Node<T> *prev;
 
    public:
     /**
@@ -68,6 +71,13 @@ struct Node {
      */
     bool isVisited() {
         return visited;
+    }
+    /**
+     * Set previous node
+     * @param prev The previous node.
+     */
+    void setPrev(Node<T> n) {
+        this->prev = n;
     }
     /**
      * Get all neighbours of the given node.
@@ -321,15 +331,34 @@ struct Graph {
      * @param t Target node.
      * @param p The path.
      */
-    void dfs(Node<T> *c, Node<T> *t, std::vector<Node<T> *> *p) {
+    T dfs(Node<T> *c, Node<T> *t, std::vector<Node<T> *> *p, T co) {
         p->push_back(c);
-        if (c->isVisited()) return;
+        if (c->isVisited()) return co;
         c->visit();
-        if (c == t) return;
+        if (c == t) return co;
         for (auto e : c->getAllEdges()) {
-            dfs(e->getTo(), t, p);
-            if (p->back() == t) return;
+            T dco = dfs(e->getTo(), t, p, co + e->getCost());
+            if (p->back() == t) return dco;
             p->pop_back();
+        }
+    }
+    /**
+     * Conduct depth-first search.
+     * @param c Current node.
+     * @param t Target node.
+     * @param p The path.
+     */
+    T pr_dfs(Node<T> *c, Node<T> *t, std::vector<Node<T> *> *p, T co) {
+        p->push_back(c);
+        if (c->isVisited()) return co;
+        printf("%s ", c->getName());
+        c->visit();
+        if (c == t) return co;
+        for (auto e : c->getAllEdges()) {
+            T dco = pr_dfs(e->getTo(), t, p, co + e->getCost());
+            if (p->back() == t) return dco;
+            p->pop_back();
+            printf("%s ", c->getName());
         }
     }
     /**
@@ -338,30 +367,53 @@ struct Graph {
      * @param target The target node.
      * @return The path or empty if no path exists.
      */
-    std::vector<Node<T> *> defise(Node<T> *start, Node<T> *target) {
+    std::pair<T, std::vector<Node<T> *>> defise(Node<T> *start, Node<T> *target) {
         std::vector<Node<T> *> p;
-        dfs(start, target, &p);
+        T co = dfs(start, target, &p, 0);
         if (p.back() != target) return {};
-        return p;
+        return {co, p};
+    }
+    /**
+     * Conduct depth-first search.
+     * @param start The starting node.
+     * @param target The target node.
+     * @return The path or empty if no path exists.
+     */
+    std::pair<T, std::vector<Node<T> *>> pr_defise(Node<T> *start, Node<T> *target) {
+        std::vector<Node<T> *> p;
+        T co = pr_dfs(start, target, &p, 0);
+        if (p.back() != target) return {};
+        printf("\n");
+        return {co, p};
     }
     /**
      * @param start The starting node's name.
      * @param target The target node's name.
      * @return The path or empty if no path exists.
      */
-    std::vector<Node<T> *> defise(char *start, char *target) {
+    std::pair<T, std::vector<Node<T> *>> defise(char *start, char *target) {
         if (!this->isNode(start) || !this->isNode(target))
-            return {};
+            return {-1, {}};
         return this->defise(this->getNode(start), this->getNode(target));
+    }
+    /**
+     * @param start The starting node's name.
+     * @param target The target node's name.
+     * @return The path or empty if no path exists.
+     */
+    std::pair<T, std::vector<Node<T> *>> pr_defise(char *start, char *target) {
+        if (!this->isNode(start) || !this->isNode(target))
+            return {-1, {}};
+        return this->pr_defise(this->getNode(start), this->getNode(target));
     }
     /**
      * Undo a search.
      * @param start The starting node.
      */
-    void unvisit(Node<T>* start) {
+    void unvisit(Node<T> *start) {
         if (!start->isVisited()) return;
         start->unvisit();
-        for (auto e: start->getAllEdges()) {
+        for (auto e : start->getAllEdges()) {
             this->unvisit(e->getTo());
         }
     }
@@ -369,11 +421,48 @@ struct Graph {
      * Undo a search.
      * @param start The starting node's name.
      */
-    void unvisit(char* start) {
+    void unvisit(char *start) {
         if (!this->isNode(start))
             return;
         this->unvisit(this->getNode(start));
     }
 };
+
+/**
+ * Load a graph from a file.
+ * @param fp The file.
+ */
+Graph<int> *loadIntGraphFromFile(FILE *fp) {
+    int N, n, co;
+    // read the number of nodes from the file ...
+    fscanf(fp, "%d", &N);
+    Graph<int> *graph = (Graph<int> *)malloc(sizeof(Graph<int>));
+    // iterate over node's edges ...
+    for (int i = 0; i < N; i++) {
+        char *tmp = (char *)malloc(sizeof(char) * MAX_NAME_LEN);
+        fscanf(fp, "%s", tmp);
+        Node<int> *ntmp = graph->getNode(tmp);
+        if (ntmp == (Node<int> *)NULL) {
+            ntmp = new Node<int>(tmp);
+            graph->addNode(ntmp);
+        }
+        // read the number of edges from the file ...
+        fscanf(fp, "%d", &n);
+        // iterate over node's edges ...
+        for (int j = 0; j < n; j++) {
+            tmp = (char *)malloc(sizeof(char) * MAX_NAME_LEN);
+            // read the target node & edge cost ...
+            fscanf(fp, "%s %d", tmp, &co);
+            Node<int> *nei = graph->getNode(tmp);
+            if (nei == (Node<int> *)NULL) {
+                nei = new Node<int>(tmp);
+                graph->addNode(nei);
+            }
+            if (!ntmp->isNeighbour(nei->getName())) ntmp->addNeighbour(nei, co);
+            if (!nei->isNeighbour(ntmp->getName())) nei->addNeighbour(ntmp, co);
+        }
+    }
+    return graph;
+}
 
 #endif
