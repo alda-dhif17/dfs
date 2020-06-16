@@ -55,6 +55,13 @@ struct Node {
         return this->name;
     }
     /**
+     * Get the previous node.
+     * @return Returns a pointer to the previous node.
+     */
+    Node<T> *getPrev() {
+        return this->prev;
+    }
+    /**
      * Visit the node.
      */
     void visit() {
@@ -76,7 +83,7 @@ struct Node {
      * Set previous node
      * @param prev The previous node.
      */
-    void setPrev(Node<T> n) {
+    void setPrev(Node<T> *n) {
         this->prev = n;
     }
     /**
@@ -102,7 +109,7 @@ struct Node {
      * @param n The new neighbour.
      */
     void addNeighbour(Node<T> *n) {
-        this->edges.push_back(new Edge<T>(this, n, 1));
+        this->edges.push_back(new Edge<T>(n, 1));
     }
     /**
      * Adds a neighbouring node.
@@ -110,7 +117,7 @@ struct Node {
      * @param c The cost to get to the neighbour.
      */
     void addNeighbour(Node<T> *n, T cost) {
-        this->edges.push_back(new Edge<T>(this, n, cost));
+        this->edges.push_back(new Edge<T>(n, cost));
     }
     /**
      * Does a neighbour with the given name exist?
@@ -153,32 +160,30 @@ struct Node {
 template <class T>
 struct Edge {
    private:
-    Node<T> *from;
     Node<T> *to;
     T cost;
 
    public:
     /**
          * Create a new Edge with the given parameters.
-         * @param from The from node.
          * @param to The to node.
          * @param cost How much it costs to get from "from" to "to".
          */
-    Edge(Node<T> *from, Node<T> *to, T cost) {
-        this->from = from;
+    Edge(Node<T> *to, T cost) {
         this->to = to;
         this->cost = cost;
     }
     /**
-         * Get the edge's cost.
-         * @return The edge's cost.
-         */
+     * Get the edge's cost.
+     * @return The edge's cost.
+     */
     T getCost() {
         return this->cost;
     }
-    Node<T> *getFrom() {
-        return this->from;
-    }
+    /**
+     * Get the edge's end node.
+     * @return The end node.
+     */
     Node<T> *getTo() {
         return this->to;
     }
@@ -387,6 +392,37 @@ struct Graph {
         return {co, p};
     }
     /**
+     * Conduct Dijkstra-Search.
+     * @param start The starting node.
+     * @param target The target node.
+     * @return The cost and path.
+     */
+    std::pair<T, std::vector<Node<T> *>> dijkstra(Node<T> *start, Node<T> *target) {
+        std::vector<Node<T> *> p;
+        std::priority_queue<std::pair<T, std::pair<Node<T> *, Node<T> *>>> q;
+        q.push({(T) 0, {(Node<T> *) NULL, start}});
+        std::pair<T, std::pair<Node<T> *, Node<T> *>> cu;
+        while (!q.empty()) {
+            cu = q.top();
+            q.pop();
+            cu.second.second->setPrev(cu.second.first);
+            if (cu.second.second == target) break;
+            for (auto e : cu.second.second->getAllEdges()) {
+                // cost has to be negative, since priority queue orders descending
+                // so ... lower value is higher when negative 
+                if (!e->getTo()->getPrev()) q.push({cu.first-e->getCost(), {cu.second.second, e->getTo()}});
+            }
+        }
+        if (cu.second.second != target) return {-1, {}};
+        while (cu.second.second != start) {
+            p.insert(p.begin(), cu.second.second);
+            cu.second.second = cu.second.second->getPrev();
+        }
+        p.insert(p.begin(), start);
+        return {-cu.first, p};
+    }
+    /**
+     * Conduct depth-first search.
      * @param start The starting node's name.
      * @param target The target node's name.
      * @return The path or empty if no path exists.
@@ -397,6 +433,7 @@ struct Graph {
         return this->defise(this->getNode(start), this->getNode(target));
     }
     /**
+     * Conduct depth-first search.
      * @param start The starting node's name.
      * @param target The target node's name.
      * @return The path or empty if no path exists.
@@ -407,12 +444,24 @@ struct Graph {
         return this->pr_defise(this->getNode(start), this->getNode(target));
     }
     /**
+     * Conduct Dijkstra-Search.
+     * @param start The starting node's name.
+     * @param target The target node's name.
+     * @return The cost and path.
+     */
+    std::pair<T, std::vector<Node<T> *>> dijkstra(char* start, char* target) {
+        if (!this->isNode(start) || !this->isNode(target))
+            return {-1, {}};
+        return this->dijkstra(this->getNode(start), this->getNode(target));
+    }
+    /**
      * Undo a search.
      * @param start The starting node.
      */
     void unvisit(Node<T> *start) {
         if (!start->isVisited()) return;
         start->unvisit();
+        start->setPrev((Node<T> *) NULL);
         for (auto e : start->getAllEdges()) {
             this->unvisit(e->getTo());
         }
